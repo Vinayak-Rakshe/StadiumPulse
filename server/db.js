@@ -3,20 +3,16 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const connStr = process.env.MONGO_URI || 'mongodb://localhost:27017/stadiumpulse';
-    
-    // Set strictQuery for Mongoose 8
     mongoose.set('strictQuery', true);
-
-    const conn = await mongoose.connect(connStr, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
+    const conn = await mongoose.connect(connStr);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (err) {
     console.error(`MongoDB Connection Error: ${err.message}`);
-    process.exit(1);
+    // Don't crash the whole server — log and let requests fail gracefully
+    // until Mongoose reconnects (it retries automatically by default)
   }
 };
+
+module.exports = connectDB;
 
 module.exports = connectDB;
