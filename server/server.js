@@ -19,7 +19,21 @@ const app = express();
 app.use(express.json());
 
 // Enable CORS for frontend API consumption
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://stadium-pulse-mu.vercel.app'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 // Dev logging output
 if (process.env.NODE_ENV === 'development') {
