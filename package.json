@@ -1,0 +1,18 @@
+{
+  "name": "stadiumpulse-root",
+  "version": "1.0.0",
+  "description": "StadiumPulse - FIFA World Cup 2026 Smart Stadium Platform",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "test": "npm run test --prefix server && npm run test --prefix client"
+  },
+  "dependencies": {
+    "mongodb": "^7.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
