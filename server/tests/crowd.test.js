@@ -3,6 +3,7 @@ const { app } = require('../server');
 const Zone = require('../models/Zone');
 const Sustainability = require('../models/Sustainability');
 const Match = require('../models/Match');
+const { _computeMatchStatus } = require('../controllers/crowdController');
 
 // Mock Models
 jest.mock('../models/Zone');
@@ -73,10 +74,38 @@ describe('Crowd and Operations API Endpoints', () => {
     });
   });
 
-  describe('GET /api/crowd/matches', () => {
-    it('should retrieve scheduled matches ordered by date', async () => {
+  describe('GET /api/crowd/matches integration test with frozen system clock', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should override an intentionally wrong stored status field with the correct computed status', async () => {
+      // Freeze system clock at 2026-07-20 19:00:00 UTC
+      jest.setSystemTime(new Date('2026-07-20T19:00:00.000Z'));
+
+      // Mock a match: kickoff is 2026-07-20 18:00:00 UTC
+      // Stored status is "Upcoming" (which is wrong, it should be "Live" since 19:00 is within 3 hours from 18:00)
       const mockMatches = [
-        { teams: 'USA vs England', date: '2026-07-16', time: '20:00', status: 'Live' }
+        {
+          _id: '607f1f77bcf86cd799439023',
+          teams: 'France vs Germany',
+          date: new Date('2026-07-20'),
+          time: '18:00',
+          status: 'Upcoming', // Wrong stored status
+          toObject: function() {
+            return {
+              _id: this._id,
+              teams: this.teams,
+              date: this.date,
+              time: this.time,
+              status: this.status
+            };
+          }
+        }
       ];
 
       Match.find.mockReturnValue({
@@ -87,7 +116,40 @@ describe('Crowd and Operations API Endpoints', () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data[0].teams).toEqual('USA vs England');
+      expect(res.body.data[0].status).toEqual('Live'); // Overridden from "Upcoming" to "Live"
+    });
+  });
+
+  describe('computeMatchStatus unit tests with explicit now parameter', () => {
+    const matchDate = new Date('2026-07-20'); // UTC midnight 2026-07-20
+    const matchTime = '18:00'; // 18:00 UTC kickoff
+
+    it('returns "Upcoming" when the kickoff date/time is in the future', () => {
+      // Reference time: 1 hour before kickoff
+      const now = new Date('2026-07-20T17:00:00.000Z');
+      const status = _computeMatchStatus(matchDate, matchTime, now);
+      expect(status).toBe('Upcoming');
+    });
+
+    it('returns "Live" exactly at kickoff instant', () => {
+      // Reference time: exactly at kickoff
+      const now = new Date('2026-07-20T18:00:00.000Z');
+      const status = _computeMatchStatus(matchDate, matchTime, now);
+      expect(status).toBe('Live');
+    });
+
+    it('returns "Live" within the 3-hour live window', () => {
+      // Reference time: 2 hours and 59 minutes after kickoff
+      const now = new Date('2026-07-20T20:59:00.000Z');
+      const status = _computeMatchStatus(matchDate, matchTime, now);
+      expect(status).toBe('Live');
+    });
+
+    it('returns "Completed" just past the 3-hour window', () => {
+      // Reference time: exactly 3 hours after kickoff
+      const now = new Date('2026-07-20T21:00:00.000Z');
+      const status = _computeMatchStatus(matchDate, matchTime, now);
+      expect(status).toBe('Completed');
     });
   });
 });

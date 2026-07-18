@@ -105,27 +105,39 @@ const sustainability = {
   notes: 'High crowd numbers for matchday. Recycling rate steady; minor food waste reduction campaigns needed in Zone B Concessions.'
 };
 
+// Build match dates relative to today so the schedule looks realistic whenever
+// the app is demoed. The stored `status` field below is kept as a valid DB
+// default, but the API (crowdController.js → computeMatchStatus) always
+// overrides it with a value derived from the current server time.
+const today = new Date();
+const daysFromToday = (n) => {
+  const d = new Date(today);
+  d.setUTCHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + n);
+  return d;
+};
+
 const matches = [
   {
-    teams: 'USA vs England',
-    date: new Date('2026-07-16'),
+    teams: 'Argentina vs England',
+    date: daysFromToday(-2),  // 2 days ago → will compute as Completed
     time: '20:00',
     stadiumName: 'StadiumPulse Arena (New York/New Jersey)',
-    status: 'Live'
+    status: 'Completed'       // NOTE: API overrides this dynamically
   },
   {
-    teams: 'Mexico vs Argentina',
-    date: new Date('2026-07-17'),
+    teams: 'France vs England',
+    date: daysFromToday(1),   // tomorrow → will compute as Upcoming
     time: '18:00',
     stadiumName: 'StadiumPulse Arena (New York/New Jersey)',
-    status: 'Upcoming'
+    status: 'Upcoming'        // NOTE: API overrides this dynamically
   },
   {
-    teams: 'Canada vs France',
-    date: new Date('2026-07-15'),
+    teams: 'Argentina vs Spain',
+    date: daysFromToday(3),   // 3 days from now → will compute as Upcoming
     time: '15:00',
     stadiumName: 'StadiumPulse Arena (New York/New Jersey)',
-    status: 'Completed'
+    status: 'Upcoming'        // NOTE: API overrides this dynamically
   }
 ];
 

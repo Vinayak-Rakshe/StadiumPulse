@@ -3,6 +3,19 @@
 
 StadiumPulse is a modern, accessible, and intelligent full-stack MERN application built to coordinate and enhance the stadium experience for **Fans, Organizers, Volunteers, and Venue Staff** during the FIFA World Cup 2026.
 
+## Challenge Requirement Mapping
+
+StadiumPulse is specifically designed to address the core requirements of Google's Prompt Wars Challenge 4:
+
+*   **Navigation & Wayfinding** &rarr; **AI Navigation & Wayfinding Assistant (Fan Concierge)**: Integrates Express-calculated Dijkstra shortest paths into Gemini natural language prompts, producing step-by-step descriptive guidance.
+*   **Multilingual Assistance** &rarr; **Auto-Detected Real-Time Chat Translation**: Auto-detects user input language (English, Spanish, French, Arabic) in the concierge and translates responses dynamically.
+*   **Accessibility** &rarr; **Step-Free Accessibility Router & Full WCAG AA Compliant UI**: Allows users to restrict paths to step-free zones (ramps/elevators) and operates with strict keyboard navigation support and custom high-visibility focus states.
+*   **Crowd Management & Real-Time Decision Support** &rarr; **Dynamic Zone Density Tracking**: Tracks live occupancies against zone capacities, providing real-time density calculations to avoid bottlenecks.
+*   **Operational Intelligence** &rarr; **AI Operations Bulletin & Volunteer Copilot**: Uses Gemini to analyze congestion data and protocol databases, synthesizing actionable operational summaries and safety checklists for staff/volunteers.
+*   **Sustainability** &rarr; **AI-Powered Green Insights Panel**: Generates sustainability logs analysis (water, energy, recycling rate) to provide real-time green optimization feedback.
+
+> ℹ️ **Render Backend Cold-Start Note**: The backend API is hosted on Render's free tier. If the application has been inactive, the web service will spin down. The first API request (e.g. loading matches or chatting with the AI concierge) can trigger a cold start and may take up to 50–90 seconds to respond. Subsequent requests will load instantly.
+
 ---
 
 ## Architecture Overview

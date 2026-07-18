@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+/**
+ * @desc    Establish a connection to the MongoDB Atlas database instance
+ * @returns {Promise<void>}
+ */
 const connectDB = async () => {
   try {
     const connStr = process.env.MONGO_URI || 'mongodb://localhost:27017/stadiumpulse';
@@ -12,7 +16,5 @@ const connectDB = async () => {
     // until Mongoose reconnects (it retries automatically by default)
   }
 };
-
-module.exports = connectDB;
 
 module.exports = connectDB;

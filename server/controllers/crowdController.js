@@ -95,6 +95,39 @@ exports.getSustainabilityMetrics = async (req, res, next) => {
 };
 
 /**
+ * Compute the real-time status for a match by combining its stored date and
+ * time fields into a full Date object and comparing against the current time.
+ *
+ * Rules:
+ *   - kickoffAt > now                          → "Upcoming"
+ *   - kickoffAt <= now < kickoffAt + 3 hours   → "Live"
+ *   - kickoffAt + 3 hours <= now               → "Completed"
+ *
+ * @param {Date}   matchDate  - The match's date field (midnight UTC from DB)
+ * @param {string} matchTime  - The kickoff time string, e.g. "20:00"
+ * @param {Date}   [now]      - The reference time to compare against (defaults to new Date())
+ * @returns {"Upcoming"|"Live"|"Completed"}
+ */
+function computeMatchStatus(matchDate, matchTime, now = new Date()) {
+  // Merge the date and time string into one precise Date object.
+  // matchDate comes from MongoDB as a UTC midnight Date; we replace its
+  // hours/minutes using the stored time string (treated as UTC).
+  const [hours, minutes] = (matchTime || '00:00').split(':').map(Number);
+  const kickoffAt = new Date(matchDate);
+  kickoffAt.setUTCHours(hours, minutes, 0, 0);
+
+  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+  if (now < kickoffAt) {
+    return 'Upcoming';
+  } else if (now < new Date(kickoffAt.getTime() + THREE_HOURS_MS)) {
+    return 'Live';
+  } else {
+    return 'Completed';
+  }
+}
+
+/**
  * @desc    Get all tournament matches
  * @route   GET /api/crowd/matches
  * @access  Public
@@ -102,13 +135,26 @@ exports.getSustainabilityMetrics = async (req, res, next) => {
 exports.getMatches = async (req, res, next) => {
   try {
     const matches = await Match.find().sort({ date: 1 });
-    
+
+    // Override stored status with a value computed from the current server time
+    // so the schedule always reflects reality regardless of what was seeded.
+    const data = matches.map((m) => {
+      const obj = m.toObject();
+      obj.status = computeMatchStatus(m.date, m.time);
+      return obj;
+    });
+
     res.status(200).json({
       success: true,
-      count: matches.length,
-      data: matches
+      count: data.length,
+      data
     });
   } catch (error) {
     next(error);
   }
 };
+
+// Export the helper so it can be unit-tested independently.
+exports.computeMatchStatus = computeMatchStatus;
+exports._computeMatchStatus = computeMatchStatus;
+
