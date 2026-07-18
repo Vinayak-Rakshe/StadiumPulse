@@ -21,7 +21,7 @@ app.use(express.json());
 // Enable CORS for frontend API consumption
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://stadium-pulse-mu.vercel.app'
+  'https://stadium-pulse-phi.vercel.app'
 ];
 
 app.use(cors({
